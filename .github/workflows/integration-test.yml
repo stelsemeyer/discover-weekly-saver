@@ -1,0 +1,61 @@
+name: 'Integration tests'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    env:
+      APP_PATH: './app'
+      SPOTIFY_CLIENT_ID: '${{ secrets.SPOTIFY_CLIENT_ID }}'
+      SPOTIFY_CLIENT_SECRET: '${{ secrets.SPOTIFY_CLIENT_SECRET }}'
+      SPOTIFY_REDIRECT_URI: '${{ secrets.SPOTIFY_REDIRECT_URI }}'
+      GCP_PROJECT_ID: 'dw-saver-28fh'
+      GCP_SECRET_ID: 'dw-saver-token'
+      CLOUD_FUNCTION_URL: 'https://europe-west3-dw-saver-28fh.cloudfunctions.net/dw-saver'
+      CLOUD_FUNCTION_SERVICE_ACCOUNT: 'dw-saver@dw-saver-28fh.iam.gserviceaccount.com'
+      DEPLOYMENT_SERVICE_ACCOUNT: 'dw-saver-deployment@dw-saver-28fh.iam.gserviceaccount.com'
+      DEPLOYMENT_WORKLOAD_IDENTITY_PROVIDER: 'projects/797082067116/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    concurrency: 'deployment'
+    steps:
+    - name: 'Checkout'
+      uses: 'actions/checkout@v3'
+    - name: 'Authenticate to Google Cloud'
+      id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        token_format: 'id_token'
+        workload_identity_provider: '${{env.DEPLOYMENT_WORKLOAD_IDENTITY_PROVIDER}}'
+        service_account: '${{env.DEPLOYMENT_SERVICE_ACCOUNT}}'
+        id_token_audience: '${{env.CLOUD_FUNCTION_URL}}'
+        access_token_subject: '${{env.CLOUD_FUNCTION_SERVICE_ACCOUNT}}'
+        id_token_include_email: true
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+    - name: 'Setup python'
+      uses: 'actions/setup-python@v4'
+      with:
+        python-version: '3.10'
+    - name: 'Install dependencies'
+      run: 'pip install -r $APP_PATH/requirements.txt'
+    - name: 'Test via functions framework'
+      run: |
+        # Verify that runner SA has access to secret:
+        # secret=$(gcloud secrets versions access 1 --secret='dw-saver-token' --impersonate-service-account=$CLOUD_FUNCTION_SERVICE_ACCOUNT)
+        pip install functions-framework
+        cd $APP_PATH
+        functions-framework --target copy_tracks --port 8765 &
+        echo "Server running"
+        sleep 5
+        response=$(curl --silent -X POST localhost:8765 -d '{}')
+
+        if [ "$response" == "OK" ]; then
+          echo "Response is OK"
+        else
+          echo "Response is not OK"
+          exit 1
+        fi

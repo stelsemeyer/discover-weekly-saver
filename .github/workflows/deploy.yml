@@ -1,0 +1,94 @@
+name: 'Deploy'
+
+on:
+  workflow_dispatch:
+
+env:
+  SPOTIFY_CLIENT_ID: '${{ secrets.SPOTIFY_CLIENT_ID }}'
+  SPOTIFY_CLIENT_SECRET: '${{ secrets.SPOTIFY_CLIENT_SECRET }}'
+  SPOTIFY_REDIRECT_URI: '${{ secrets.SPOTIFY_REDIRECT_URI }}'
+  CLOUD_FUNCTION_NAME: 'dw-saver'
+  CLOUD_FUNCTION_REGION: 'europe-west3'
+  CLOUD_FUNCTION_BUCKET_NAME: 'dw-saver-35c3'
+  CLOUD_FUNCTION_FILE_NAME: 'function.zip'
+  CLOUD_FUNCTION_URL: 'https://europe-west3-dw-saver-28fh.cloudfunctions.net/dw-saver'
+  CLOUD_FUNCTION_SERVICE_ACCOUNT: 'dw-saver@dw-saver-28fh.iam.gserviceaccount.com'
+  DEPLOYMENT_SERVICE_ACCOUNT: 'dw-saver-deployment@dw-saver-28fh.iam.gserviceaccount.com'
+  DEPLOYMENT_WORKLOAD_IDENTITY_PROVIDER: 'projects/797082067116/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+jobs:
+  deploy:
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    concurrency: 'deployment'
+    steps:
+    - name: 'Checkout'
+      uses: 'actions/checkout@v3'
+    - name: 'Authenticate to Google Cloud'
+      id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        workload_identity_provider: '${{env.DEPLOYMENT_WORKLOAD_IDENTITY_PROVIDER}}'
+        service_account: '${{env.DEPLOYMENT_SERVICE_ACCOUNT}}'
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+    - name: 'Zip function source files'
+      run: 'zip -qq -r -j function.zip app'
+    - name: 'Upload function source zip'
+      id: 'upload-function-source'
+      uses: 'google-github-actions/upload-cloud-storage@v1'
+      with:
+        path: 'function.zip'
+        destination: '${{env.CLOUD_FUNCTION_BUCKET_NAME}}/${{ github.sha }}'
+        gzip: false
+    - name: 'Deploy cloud function'
+      # not using google-github-actions/deploy-cloud-functions@v1 because it is declarative,
+      # meaning it will overwrite any existing values in a new deployment
+      run: |
+        echo ${{ steps.upload-function-source.outputs.uploaded }}
+        gcloud functions deploy \
+          --region=$CLOUD_FUNCTION_REGION \
+          $CLOUD_FUNCTION_NAME \
+          --source gs://${{env.CLOUD_FUNCTION_BUCKET_NAME}}/${{ steps.upload-function-source.outputs.uploaded }} \
+          --update-env-vars SPOTIFY_CLIENT_ID=$SPOTIFY_CLIENT_ID,SPOTIFY_CLIENT_SECRET=$SPOTIFY_CLIENT_SECRET,SPOTIFY_REDIRECT_URI=$SPOTIFY_REDIRECT_URI
+
+  test-deployment:
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    needs: 'deploy'
+    steps:
+    - name: 'Authenticate to Google Cloud'
+      id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        # Get an id(!) token to be able to invoke cloud function
+        token_format: 'id_token'
+        workload_identity_provider: '${{env.DEPLOYMENT_WORKLOAD_IDENTITY_PROVIDER}}'
+        service_account: '${{env.DEPLOYMENT_SERVICE_ACCOUNT}}'
+        id_token_audience: '${{env.CLOUD_FUNCTION_URL}}'
+        access_token_subject: '${{env.CLOUD_FUNCTION_SERVICE_ACCOUNT}}'
+        id_token_include_email: true
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+    # - name: 'Test cloud function via gcloud (post)'
+    #   run: 'gcloud functions call --region $CLOUD_FUNCTION_REGION $CLOUD_FUNCTION_NAME --data "{}"'
+    - name: 'Test cloud function via HTTP'
+      run: |
+        response=$(curl \
+          --silent \
+          -m 310 \
+          -X POST \
+          $CLOUD_FUNCTION_URL \
+          -H "Authorization: bearer ${{ steps.auth.outputs.id_token }}" \
+          -H "Content-Type: application/json" \
+          -d '{}')
+
+        if [ "$response" == "OK" ]; then
+          echo "Response is OK"
+        else
+          echo "Response is not OK"
+          exit 1
+        fi
