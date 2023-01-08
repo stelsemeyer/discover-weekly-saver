@@ -1,5 +1,5 @@
 resource "google_logging_metric" "alert" {
-  count = local.alert_email != "" ? 1 : 0
+  count = var.alert_email != "" ? 1 : 0
 
   name = local.name
 
@@ -30,7 +30,7 @@ resource "google_logging_metric" "alert" {
 }
 
 resource "google_monitoring_alert_policy" "alert" {
-  count = local.alert_email != "" ? 1 : 0
+  count = var.alert_email != "" ? 1 : 0
 
   display_name = local.name
   combiner     = "OR"
@@ -58,11 +58,11 @@ resource "google_monitoring_alert_policy" "alert" {
 }
 
 resource "google_monitoring_notification_channel" "alert" {
-  count = local.alert_email != "" ? 1 : 0
+  count = var.alert_email != "" ? 1 : 0
 
   display_name = local.name
   type         = "email"
   labels = {
-    email_address = local.alert_email
+    email_address = var.alert_email
   }
 }

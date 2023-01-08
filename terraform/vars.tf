@@ -1,14 +1,12 @@
-variable "spotify_client_id" {
+variable "gcp_project_id" {
   type    = string
-  default = ""
 }
 
-variable "spotify_client_secret" {
+variable "github_repo" {
   type    = string
-  default = ""
 }
 
-variable "spotify_redirect_uri" {
+variable "alert_email" {
   type    = string
-  default = "http://localhost:8080"
+  default = ""
 }

@@ -12,6 +12,10 @@ resource "google_cloud_scheduler_job" "cloud_scheduler" {
       service_account_email = google_service_account.cloud_scheduler.email
     }
   }
+
+  depends_on = [
+    google_project_service.cloud_scheduler
+  ]
 }
 
 resource "google_service_account" "cloud_scheduler" {
@@ -24,4 +28,12 @@ resource "google_cloudfunctions_function_iam_member" "cloud_scheduler" {
   cloud_function = google_cloudfunctions_function.cloud_function.name
   role           = "roles/cloudfunctions.invoker"
   member         = "serviceAccount:${google_service_account.cloud_scheduler.email}"
+}
+
+# Activate API
+resource "google_project_service" "cloud_scheduler" {
+  project = var.gcp_project_id
+  service = "cloudscheduler.googleapis.com"
+
+  disable_on_destroy = false
 }

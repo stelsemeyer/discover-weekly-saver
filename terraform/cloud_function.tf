@@ -35,13 +35,16 @@ resource "google_cloudfunctions_function" "cloud_function" {
   service_account_email        = google_service_account.cloud_function.email
 
   environment_variables = {
-    GCP_PROJECT_ID        = local.project
+    GCP_PROJECT_ID        = var.gcp_project_id
     GCP_SECRET_ID         = local.secret_name
-    # We will pass the Spotify credentials in the deployment step within Github actions
-    # SPOTIFY_CLIENT_ID     = var.spotify_client_id
-    # SPOTIFY_CLIENT_SECRET = var.spotify_client_secret
-    # SPOTIFY_REDIRECT_URI  = var.spotify_redirect_uri
+    # We will pass the Spotify credentials in the deployment step within Github actions,
+    # alternatively we could pass them here as well.
   }
+
+  depends_on = [
+    google_project_service.cloud_functions,
+    google_project_service.cloud_build
+  ]
 
   # Since we manage the cloud function through Github we do not want
   # to trigger recreation when specific values change
@@ -81,8 +84,24 @@ resource "google_secret_manager_secret_iam_member" "cloud_function" {
 
 # Activate API
 resource "google_project_service" "secret_manager" {
-  project = local.project
+  project = var.gcp_project_id
   service = "secretmanager.googleapis.com"
+
+  disable_on_destroy = false
+}
+
+# Activate API
+resource "google_project_service" "cloud_functions" {
+  project = var.gcp_project_id
+  service = "cloudfunctions.googleapis.com"
+
+  disable_on_destroy = false
+}
+
+# Activate API
+resource "google_project_service" "cloud_build" {
+  project = var.gcp_project_id
+  service = "cloudbuild.googleapis.com"
 
   disable_on_destroy = false
 }

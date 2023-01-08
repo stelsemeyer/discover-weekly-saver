@@ -6,7 +6,7 @@ resource "google_service_account" "deployment" {
 # So when destroying it is recommend to remove state first
 # via terraform state rm google_iam_workload_identity_pool.github
 resource "google_iam_workload_identity_pool" "deployment" {
-  project                   = local.project
+  project                   = var.gcp_project_id
   workload_identity_pool_id = "github-pool"
 
   lifecycle {
@@ -15,7 +15,7 @@ resource "google_iam_workload_identity_pool" "deployment" {
 }
 
 resource "google_iam_workload_identity_pool_provider" "deployment" {
-  project                            = local.project
+  project                            = var.gcp_project_id
   workload_identity_pool_id          = google_iam_workload_identity_pool.deployment.workload_identity_pool_id
   workload_identity_pool_provider_id = "github-provider"
   attribute_mapping = {
@@ -37,7 +37,7 @@ resource "google_iam_workload_identity_pool_provider" "deployment" {
 resource "google_service_account_iam_member" "deployment_workload_identity_user" {
   service_account_id = google_service_account.deployment.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.deployment.name}/attribute.repository/${local.repo}"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.deployment.name}/attribute.repository/${var.github_repo}"
 }
 
 # To deploy cloud function on gh
@@ -76,7 +76,7 @@ resource "google_service_account_iam_member" "deployment_service_account_imperso
 resource "google_service_account_iam_member" "deployment_service_acccount_token_creator" {
   service_account_id = google_service_account.deployment.name
   role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.deployment.name}/attribute.repository/${local.repo}"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.deployment.name}/attribute.repository/${var.github_repo}"
 }
 
 resource "google_secret_manager_secret_iam_member" "deployment" {
