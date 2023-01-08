@@ -4,9 +4,10 @@ As an avid fan of Spotify's Discover Weekly playlist, I always wanted to have a 
 
 This project uses
 
-- python (including the [spotipy](https://spotipy.readthedocs.io/) package) to back up Spotify playlist tracks by copying them into another playlist,
+- python (including the [spotipy](https://spotipy.readthedocs.io/) module) to back up Spotify playlist tracks by copying them into another playlist,
 - serverless Google cloud infrastructure (Cloud functions, Cloud scheduler, Cloud storage, Secret manager, etc.) to schedule and run the code,
-- terraform to manage the infrastructure in code
+- terraform to manage the cloud infrastructure in code
+- Github Actions to test and deploy the code
 
 The cloud function which executes the script is [idempotent](https://cloud.google.com/blog/products/serverless/cloud-functions-pro-tips-building-idempotent-functions?hl=en), i.e. it "can be applied multiple times without changing the result beyond the initial application" (see [wiki/Idempotence](https://en.wikipedia.org/wiki/Idempotence)).
 
