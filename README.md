@@ -1,6 +1,6 @@
 ## Overview
 
-As an avid fan of Spotify's Discover Weekly playlist, I always wanted to have a scheduled, automated, self-controlled lean and cheap way of backing up the weekly generated tracks. There are different plugins to achieve the same result and integrate much more easily, so bear in mind that this is a slightly overengineered solution for cloud infrastructure enthusiasts.
+As an avid fan of Spotify's Discover Weekly playlist, I always wanted to have a scheduled, automated, self-controlled lean and cheap way of backing up the weekly generated tracks. There are different plugins to achieve the same result and integrate much more easily, so bear in mind that this is a slightly over-engineered solution for cloud infrastructure enthusiasts.
 
 This project uses
 
@@ -19,7 +19,7 @@ Existing Google Cloud project and terraform (>=v1.3.4).
 
 ## Setup
 
-### 0 tl;dr
+### 0 TL;DR
 
 Short summary of what follows below in more detail:
 
