@@ -25,11 +25,11 @@ def test_full_http_integration():
     # Environment can be passed implicitly or explicitly as below
     env = {
         **os.environ.copy(),
-        "SPOTIFY_CLIENT_ID": "...",
-        "SPOTIFY_CLIENT_SECRET": "...",
-        "SPOTIFY_REDIRECT_URI": "...",
-        "GCP_PROJECT_ID": "...",
-        "GCP_SECRET_ID": "...",
+        # "SPOTIFY_CLIENT_ID": "...",
+        # "SPOTIFY_CLIENT_SECRET": "...",
+        # "SPOTIFY_REDIRECT_URI": "...",
+        # "GCP_PROJECT_ID": "...",
+        # "GCP_SECRET_ID": "...",
     }
     process = subprocess.Popen(
         ["functions-framework", "--target", "copy_tracks", "--port", str(PORT)],
