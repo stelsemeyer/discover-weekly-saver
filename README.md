@@ -225,8 +225,7 @@ If we do not bother, a simple `terraform destroy` will do though.
 
 As per 2022-12-27 the cloud infrastructure cost for Cloud Function, Cloud Storage, Cloud Scheduler are below 0.01$ per month and within the free tiers, if deployments are done moderately (few a week) and schedule is reasonable (few times a week).
 
-Only potential cost driver are the Secrets, if multiple versions are kept active (i.e. undestroyed). Since the refresh token produces new versions regularly, versions can add up and produce [low but increasing cost](https://cloud.google.com/secret-manager/pricing) exceeding the free tier. Thus there is a method to destroy old secret versions.
-
+Only potential cost driver are the Secrets, if multiple versions are kept active (i.e. undestroyed). Since the refresh token produces new versions regularly, versions can add up and produce [low but increasing cost](https://cloud.google.com/secret-manager/pricing) exceeding the free tier. Thus there is a method (see `_delete_old_versions` in [utils.py](app/utils.py))) to destroy old secret versions, which is invoked by default once the secret has been updated.
 
 ## Miscellaneous
 
