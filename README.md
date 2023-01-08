@@ -23,11 +23,11 @@ Existing Google Cloud project and terraform (>=v1.3.4).
 
 Short summary of what follows below in more detail:
 
-1. Create Spotify app in Spotify Developer Dashboard to create credentials and identify playlist IDs.
-1. Apply terraform
-1. Run auth script to create and store refresh token, this equips the cloud function with access to Spotify account.
+1. Create Spotify app in Spotify Developer Dashboard to create credentials to authenticate later on and identify playlist IDs.
+1. Apply terraform to create cloud infrastructure
+1. Run auth script to create and store refresh token in Google Secret, this equips the cloud function with access to the Spotify account.
 1. Configure Github for CI/CD
-1. Test cloud function via curl
+1. Test cloud function locally via curl
 
 ### 1 Setting up Spotify
 
