@@ -3,13 +3,12 @@ import os
 import functions_framework
 from utils import _copy_tracks
 
-SOURCE_PLAYLIST_ID = os.environ.get("SOURCE_PLAYLIST_ID")
-DESTINATION_PLAYLIST_ID = os.environ.get("DESTINATION_PLAYLIST_ID")  # fmt: skip
-
 
 @functions_framework.http
 def copy_tracks(request):
-    return _copy_tracks(SOURCE_PLAYLIST_ID, DESTINATION_PLAYLIST_ID)
+    source_playlist_id = os.environ["SOURCE_PLAYLIST_ID"]
+    destination_playlist_id = os.environ["DESTINATION_PLAYLIST_ID"]
+    return _copy_tracks(source_playlist_id, destination_playlist_id)
 
 
 # For local testing
@@ -20,4 +19,7 @@ if __name__ == "__main__":
         load_dotenv()
     except ModuleNotFoundError:
         pass
-    _copy_tracks(SOURCE_PLAYLIST_ID, DESTINATION_PLAYLIST_ID)
+
+    source_playlist_id = os.environ["SOURCE_PLAYLIST_ID"]
+    destination_playlist_id = os.environ["DESTINATION_PLAYLIST_ID"]
+    _copy_tracks(source_playlist_id, destination_playlist_id)

@@ -10,6 +10,8 @@ jobs:
       SPOTIFY_CLIENT_ID: '${{ secrets.SPOTIFY_CLIENT_ID }}'
       SPOTIFY_CLIENT_SECRET: '${{ secrets.SPOTIFY_CLIENT_SECRET }}'
       SPOTIFY_REDIRECT_URI: '${{ secrets.SPOTIFY_REDIRECT_URI }}'
+      SOURCE_PLAYLIST_ID: '${{ secrets.SOURCE_PLAYLIST_ID }}'
+      DESTINATION_PLAYLIST_ID: '${{ secrets.DESTINATION_PLAYLIST_ID }}'
       GCP_PROJECT_ID: 'dw-saver-28fh'
       GCP_SECRET_ID: 'dw-saver-token'
       CLOUD_FUNCTION_URL: 'https://europe-west3-dw-saver-28fh.cloudfunctions.net/dw-saver'
