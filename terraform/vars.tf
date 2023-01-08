@@ -1,9 +1,9 @@
 variable "gcp_project_id" {
-  type    = string
+  type = string
 }
 
 variable "github_repo" {
-  type    = string
+  type = string
 }
 
 variable "alert_email" {

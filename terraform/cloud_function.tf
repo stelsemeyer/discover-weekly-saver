@@ -35,8 +35,8 @@ resource "google_cloudfunctions_function" "cloud_function" {
   service_account_email        = google_service_account.cloud_function.email
 
   environment_variables = {
-    GCP_PROJECT_ID        = var.gcp_project_id
-    GCP_SECRET_ID         = local.secret_name
+    GCP_PROJECT_ID = var.gcp_project_id
+    GCP_SECRET_ID  = local.secret_name
     # We will pass the Spotify credentials in the deployment step within Github actions,
     # alternatively we could pass them here as well.
   }
