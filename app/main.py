@@ -1,6 +1,7 @@
+import os
+
 import functions_framework
 from utils import _copy_tracks
-
 
 SOURCE_PLAYLIST_ID = os.environ.get("SOURCE_PLAYLIST_ID")
 DESTINATION_PLAYLIST_ID = os.environ.get("DESTINATION_PLAYLIST_ID")  # fmt: skip
