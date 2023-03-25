@@ -14,7 +14,7 @@ The cloud function which executes the script is [idempotent](https://cloud.googl
 In case you are not interested in backing up Spotify playlists or Spotify's Discover Weekly, this project may be of interest if you want to learn how to automate and schedule a python function call using cloud infrastructure and infrastructure as code.
 
 <p align="center">
-  <img src="diagram.png" />
+  <img width="70%" height="70%" src="diagram.png" />
 </p>
 
 ## Prerequisites
