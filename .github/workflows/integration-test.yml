@@ -1,0 +1,63 @@
+name: 'Integration tests'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: 'ubuntu-latest'
+    env:
+      APP_PATH: './app'
+      SPOTIFY_CLIENT_ID: '${{ secrets.SPOTIFY_CLIENT_ID }}'
+      SPOTIFY_CLIENT_SECRET: '${{ secrets.SPOTIFY_CLIENT_SECRET }}'
+      SPOTIFY_REDIRECT_URI: '${{ secrets.SPOTIFY_REDIRECT_URI }}'
+      SOURCE_PLAYLIST_ID: '${{ secrets.SOURCE_PLAYLIST_ID }}'
+      DESTINATION_PLAYLIST_ID: '${{ secrets.DESTINATION_PLAYLIST_ID }}'
+      GCP_PROJECT_ID: '${{ vars.GCP_PROJECT_ID }}'
+      GCP_SECRET_ID: '${{ vars.GCP_SECRET_ID }}'
+      CLOUD_FUNCTION_URL: '${{ vars.CLOUD_FUNCTION_URL }}'
+      CLOUD_FUNCTION_SERVICE_ACCOUNT: '${{ vars.CLOUD_FUNCTION_SERVICE_ACCOUNT }}'
+      DEPLOYMENT_SERVICE_ACCOUNT: '${{ vars.DEPLOYMENT_SERVICE_ACCOUNT }}'
+      DEPLOYMENT_WORKLOAD_IDENTITY_PROVIDER: '${{ vars.DEPLOYMENT_WORKLOAD_IDENTITY_PROVIDER }}'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    concurrency: 'deployment'
+    steps:
+    - name: 'Checkout'
+      uses: 'actions/checkout@v3'
+    - name: 'Authenticate to Google Cloud'
+      id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        token_format: 'id_token'
+        workload_identity_provider: '${{env.DEPLOYMENT_WORKLOAD_IDENTITY_PROVIDER}}'
+        service_account: '${{env.DEPLOYMENT_SERVICE_ACCOUNT}}'
+        id_token_audience: '${{env.CLOUD_FUNCTION_URL}}'
+        access_token_subject: '${{env.CLOUD_FUNCTION_SERVICE_ACCOUNT}}'
+        id_token_include_email: true
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+    - name: 'Setup python'
+      uses: 'actions/setup-python@v4'
+      with:
+        python-version: '3.10'
+    - name: 'Install dependencies'
+      run: 'pip install -r $APP_PATH/requirements.txt'
+    - name: 'Test via functions framework'
+      run: |
+        # Verify that runner SA has access to secret:
+        # secret=$(gcloud secrets versions access 1 --secret=$GCP_SECRET_ID --impersonate-service-account=$CLOUD_FUNCTION_SERVICE_ACCOUNT)
+        pip install functions-framework
+        cd $APP_PATH
+        functions-framework --target copy_tracks --port 8765 &
+        echo "Server running"
+        sleep 5
+        response=$(curl --silent -X POST localhost:8765 -d '{}')
+
+        if [ "$response" == "OK" ]; then
+          echo "Response is OK"
+        else
+          echo "Response is not OK"
+          exit 1
+        fi
